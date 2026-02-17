@@ -1,0 +1,1 @@
+/usr/sbin/cc -Wl,--dependency-file=CMakeFiles/test_network_data_operations.dir/link.d CMakeFiles/test_network_data_operations.dir/test_network_data_operations.c.o -o test_network_data_operations  ../liblora_networking_lib.a -lm

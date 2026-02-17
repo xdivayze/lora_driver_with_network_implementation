@@ -1,0 +1,2 @@
+/usr/sbin/ar qc liblora_networking_lib.a CMakeFiles/lora_networking_lib.dir/src/packet.c.o CMakeFiles/lora_networking_lib.dir/src/network_data_operations.c.o CMakeFiles/lora_networking_lib.dir/src/rx_packet_handler.c.o
+/usr/sbin/ranlib liblora_networking_lib.a
