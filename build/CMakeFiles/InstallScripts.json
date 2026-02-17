@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/cavej/repos/apo_ucak/hardware_impl/components/lora_networking_lib/upstream/build/cmake_install.cmake",
-		"/home/cavej/repos/apo_ucak/hardware_impl/components/lora_networking_lib/upstream/build/tests/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

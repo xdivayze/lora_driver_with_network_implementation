@@ -1,1 +1,0 @@
-/usr/sbin/cc -Wl,--dependency-file=CMakeFiles/test_rx_packet_handler.dir/link.d CMakeFiles/test_rx_packet_handler.dir/test_rx_packet_handler.c.o -o test_rx_packet_handler  ../liblora_networking_lib.a -lm
