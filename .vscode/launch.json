@@ -4,7 +4,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tests/test_logger",
+            "program": "${workspaceFolder}/build/tests/test_spi_port",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

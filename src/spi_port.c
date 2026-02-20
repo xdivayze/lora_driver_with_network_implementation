@@ -13,6 +13,7 @@ void configure_spi_port(spi_register_writer_t cfg_spi_writer, spi_register_reade
     initialized = true;
 }
 
+//TODO add NULL check for spi pointer
 spi_port_return_t spi_burst_write_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
 {
     if (!initialized)
