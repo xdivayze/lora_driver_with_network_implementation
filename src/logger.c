@@ -21,6 +21,6 @@ void network_log(char *str, log_level_t param_log_level)
     if (log_level == UNINITIALIZED)
         return;
 
-    if (log_level >= param_log_level)
+    if (param_log_level >= log_level)
         logger(str, param_log_level);
 }
