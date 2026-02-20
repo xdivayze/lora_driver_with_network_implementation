@@ -16,6 +16,7 @@ target_sources(lora_networking_lib
     src/packet.c
     src/network_data_operations.c
     src/rx_packet_handler.c
+    src/logger.c
 )
 
 target_include_directories(lora_networking_lib

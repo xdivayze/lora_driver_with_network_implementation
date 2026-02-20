@@ -6,6 +6,7 @@ set(TEST_SOURCES
     test_packets.c
     test_network_data_operations.c
     test_rx_packet_handler.c
+    test_logger.c
 )
 
 foreach(src IN LISTS TEST_SOURCES)

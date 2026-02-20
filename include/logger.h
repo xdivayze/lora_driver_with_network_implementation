@@ -16,4 +16,4 @@ void set_log_level(log_level_t cfg_log_level);
 
 void configure_logger(logger_t cfg_logger, log_level_t cfg_log_level);
 
-void log(char *str, log_level_t param_log_level);
+void network_log(char *str, log_level_t param_log_level);
