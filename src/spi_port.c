@@ -14,16 +14,16 @@ void configure_spi_port(spi_register_writer_t cfg_spi_writer, spi_register_reade
 }
 
 //TODO add NULL check for spi pointer
-spi_port_return_t spi_burst_write_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
+sx127x_err_t spi_burst_write_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
 {
     if (!initialized)
-        return SPI_PORT_UNITIALIZED;
+        return SX_UNIT_UNITIALIZED;
     return spi_burst_writer(spi, reg, data, len);
 }
 
-spi_port_return_t spi_burst_read_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
+sx127x_err_t spi_burst_read_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
 {
     if (!initialized)
-        return SPI_PORT_UNITIALIZED;
+        return SX_UNIT_UNITIALIZED;
     return spi_burst_reader(spi, reg, data, len);
 }

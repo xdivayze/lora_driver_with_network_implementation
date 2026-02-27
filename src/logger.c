@@ -1,5 +1,6 @@
 #include "logger.h"
-
+#include <string.h>
+#include <stdio.h>
 // logs above this level are printed
 static log_level_t log_level = UNINITIALIZED;
 
@@ -23,4 +24,17 @@ void network_log(char *str, log_level_t param_log_level)
 
     if (param_log_level >= log_level)
         logger(str, param_log_level);
+}
+
+//TODO tests below
+
+void network_log_with_tag(char* tag, char* str, log_level_t param_log_level) {
+    char msg[4096];
+    sprintf(msg, "%s: %s", tag, str);
+    network_log(msg, param_log_level);
+}
+
+void sx127x_log_err(char *tag, char *str)
+{
+    network_log_with_tag(tag, str, LOG_ERROR);
 }

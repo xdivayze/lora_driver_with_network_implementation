@@ -18,6 +18,8 @@ target_sources(lora_networking_lib
     src/rx_packet_handler.c
     src/logger.c
     src/spi_port.c
+    src/sx1278_driver.c
+    src/sx1278_config.c
 )
 
 target_include_directories(lora_networking_lib
