@@ -90,7 +90,7 @@ sx127x_err_t sx_1278_set_spreading_factor(uint8_t sf)
     ret = sx1278_switch_mode(MODE_LORA | MODE_STDBY);
     if (ret != SX_OK)
     {
-        network_log_error("couldnt switch to standby");
+        network_log_err(TAG, "couldnt switch to standby");
         return ret;
     }
 
@@ -105,7 +105,7 @@ sx127x_err_t sx_1278_set_spreading_factor(uint8_t sf)
 
     ret = sx1278_switch_mode(MODE_LORA | MODE_SLEEP);
     if (ret != SX_OK)
-        sx127x_log_err(TAG, "error occured while switching to sleep mode");
+        network_log_err(TAG, "error occured while switching to sleep mode");
     return ret;
 }
 
@@ -118,7 +118,7 @@ sx127x_err_t sx1278_set_bandwidth(bandwidths bw, coding_rate cr, bool enable_exp
     ret = sx1278_switch_mode(MODE_LORA | MODE_STDBY);
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt switch to standby");
+        network_log_err(TAG, "couldnt switch to standby");
         return ret;
     }
 
@@ -134,14 +134,14 @@ sx127x_err_t sx1278_set_bandwidth(bandwidths bw, coding_rate cr, bool enable_exp
         ret = sx_1278_switch_to_nth_channel(0);
         if (ret != SX_OK)
         {
-            sx127x_log_err(TAG, "error occured while switching back to 0th channel");
+            network_log_err(TAG, "error occured while switching back to 0th channel");
             return ret;
         }
     }
 
     ret = sx1278_switch_mode(MODE_LORA | MODE_SLEEP);
     if (ret != SX_OK)
-        sx127x_log_err(TAG, "error occured while switching to sleep mode");
+        network_log_err(TAG, "error occured while switching to sleep mode");
 
     return ret;
 }
@@ -150,16 +150,17 @@ sx127x_err_t sx1278_set_bandwidth(bandwidths bw, coding_rate cr, bool enable_exp
 sx127x_err_t initialize_sx_1278()
 {
     uint8_t data = 0;
-    ESP_ERROR_CHECK(spi_burst_read_reg(sx127x_spi, 0x42, &data, 1)); // register version
+    sx127x_err_t ret;
+    ret = spi_burst_read_reg(sx127x_spi, 0x42, &data, 1); // register version
+    if (ret != SX_OK)
+        return ret;
     if (data != 0x12)
     {
-        sx127x_log_err(TAG, "sx1278 register version is not valid");
+        network_log_err(TAG, "sx1278 register version is not valid");
         return SX_INVALID_RESPONSE;
     }
 
-    sx127x_err_t ret;
-
-    ret = sx1278_switch_mode(MODE_LORA | MODE_SLEEP);
+        ret = sx1278_switch_mode(MODE_LORA | MODE_SLEEP);
     if (ret != SX_OK)
         return ret;
 

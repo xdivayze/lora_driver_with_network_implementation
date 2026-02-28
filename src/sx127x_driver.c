@@ -1,4 +1,4 @@
-#include "sx1278_driver.h"
+#include "sx127x_driver.h"
 #include "spi_port.h"
 #include "packet.h"
 #include "logger.h"
@@ -18,7 +18,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     ret = sx1278_switch_mode(MODE_LORA | MODE_STDBY);
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "error occured while switching mode");
+        network_log_err(TAG, "error occured while switching mode");
         return ret;
     }
 
@@ -32,7 +32,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     {
         sx1278_clear_irq();
 
-        sx127x_log_err(TAG, "rx read not done\n");
+        network_log_err(TAG, "rx read not done\n");
         return SX_INVALID_STATE;
     }
     uint8_t rx_crc_mask = rx_done_mask >> 1; // PayloadCrcError bit
@@ -40,7 +40,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     {
         sx1278_clear_irq();
 
-        sx127x_log_err(TAG, "rx crc failed, discarding packet\n");
+        network_log_err(TAG, "rx crc failed, discarding packet\n");
         return SX_INVALID_CRC;
     }
 
@@ -52,7 +52,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     if (ret != SX_OK)
     {
         sx1278_clear_irq();
-        sx127x_log_err(TAG, "couldnt get rx fifo pointer, skipping packet\n");
+        network_log_err(TAG, "couldnt get rx fifo pointer, skipping packet\n");
         return ret;
     }
 
@@ -61,7 +61,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     {
         sx1278_clear_irq();
 
-        sx127x_log_err(TAG, "couldnt set rx fifo pointer, skipping packet\n");
+        network_log_err(TAG, "couldnt set rx fifo pointer, skipping packet\n");
         return ret;
     }
 
@@ -69,7 +69,7 @@ sx127x_err_t sx1278_read_last_payload(uint8_t *buf, size_t *len)
     if (ret != SX_OK)
     {
         sx1278_clear_irq();
-        sx127x_log_err(TAG, "couldnt read rx fifo, skipping packet\n");
+        network_log_err(TAG, "couldnt read rx fifo, skipping packet\n");
         return ret;
     }
 
@@ -86,7 +86,7 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
     sx127x_err_t ret = sx1278_switch_mode((MODE_LORA | MODE_STDBY));
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt put sx1278 in standby mode\n");
+        network_log_err(TAG, "couldnt put sx1278 in standby mode\n");
         return ret;
     }
 
@@ -94,26 +94,26 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
     ret = spi_burst_read_reg(sx127x_spi, 0x0E, &data, 1); // read fifo tx base pointer
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt set fifo address\n");
+        network_log_err(TAG, "couldnt set fifo address\n");
         return ret;
     }
     ret = spi_burst_write_reg(sx127x_spi, 0x0D, &data, 1); // set fifo pointer
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt set fifo address\n");
+        network_log_err(TAG, "couldnt set fifo address\n");
         return ret;
     }
 
     ret = spi_burst_write_reg(sx127x_spi, 0x22, &len, 1); // write payload length
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt write packet length\n");
+        network_log_err(TAG, "couldnt write packet length\n");
         return ret;
     }
     ret = spi_burst_write_reg(sx127x_spi, 0x00, buf, len); // write payload
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt write packet to tx fifo\n");
+        network_log_err(TAG, "couldnt write packet to tx fifo\n");
         return ret;
     }
 
@@ -122,7 +122,7 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
     if (ret != SX_OK)
     {
 
-        sx127x_log_err(TAG, "couldnt reset irq flags\n");
+        network_log_err(TAG, "couldnt reset irq flags\n");
         return ret;
     }
 
@@ -130,14 +130,14 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
     if (ret != SX_OK)
     {
 
-        sx127x_log_err(TAG, "couldnt switch to transmit mode\n");
+        network_log_err(TAG, "couldnt switch to transmit mode\n");
         return ret;
     }
 
     ret = poll_for_irq_flag(3000, 3, (1 << 3), true); // poll until tx done flag is set
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "failed while polling for irq tx done flag\n");
+        network_log_err(TAG, "failed while polling for irq tx done flag\n");
         return ret;
     }
 
@@ -146,7 +146,7 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
     if (ret != SX_OK)
     {
 
-        sx127x_log_err(TAG, "couldnt reset irq flags\n");
+        network_log_err(TAG, "couldnt reset irq flags\n");
         return ret;
     }
 
@@ -155,7 +155,7 @@ sx127x_err_t sx1278_send_payload(uint8_t *buf, uint8_t len, int switch_to_rx_aft
 
     if (ret != SX_OK)
     {
-        sx127x_log_err(TAG, "couldnt put sx1278 in next mode after tx is complete\n");
+        network_log_err(TAG, "couldnt put sx1278 in next mode after tx is complete\n");
         return ret;
     }
 
@@ -180,7 +180,7 @@ sx127x_err_t poll_for_irq_flag(size_t timeout_ms, size_t poll_interval_ms, uint8
         ret = spi_burst_read_reg(sx127x_spi, 0x12, &irq, 1);
         if (ret != SX_OK)
         {
-            sx127x_log_err(TAG, "couldnt read irq register\n");
+            network_log_err(TAG, "couldnt read irq register\n");
             if (cleanup)
             {
                 data = 0xFF;
@@ -205,10 +205,10 @@ sx127x_err_t poll_for_irq_flag(size_t timeout_ms, size_t poll_interval_ms, uint8
                 data = 0xFF;
                 spi_burst_write_reg(sx127x_spi, 0x12, &data, 1); // clear irq flags
             }
-            sx127x_log_err(TAG, "polling timeout");
+            network_log_err(TAG, "polling timeout");
             return SX_TIMEOUT;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(poll_interval_ms));
+        sx127x_task_delay_ms(poll_interval_ms);
     }
 }

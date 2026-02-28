@@ -20,4 +20,4 @@ void network_log(char *str, log_level_t param_log_level);
 
 void network_log_with_tag(char *tag, char *str, log_level_t param_log_level);
 
-void sx127x_log_err(char *tag, char *str);
+void network_log_err(char *tag, char *str);
