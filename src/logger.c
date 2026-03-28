@@ -26,8 +26,6 @@ void network_log(char *str, log_level_t param_log_level)
         logger(str, param_log_level);
 }
 
-//TODO tests below
-
 void network_log_with_tag(char* tag, char* str, log_level_t param_log_level) {
     char msg[4096];
     sprintf(msg, "%s: %s", tag, str);
