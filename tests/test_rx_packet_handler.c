@@ -32,16 +32,14 @@ static void packet_end_callback(packet **p_arr, int n)
 void test_handler_command_packet_bypass_with_burst_redundancy()
 {
     log_info("starting command packet bypass test");
-    reset_packet_handler_state();
+    rx_handler_ctx_t ctx;
     char *data_str = TEST_STRING;
     size_t data_len = strlen(data_str) + 1;
     uint8_t *data = malloc(data_len);
     uint16_t daddr = 0xFF00;
     uint16_t saddr = 0x00FF;
 
-    configure_rx_packet_handler(command_callback, packet_end_callback, daddr, saddr);
-
-    uint8_t data_str2[256];
+    rx_handler_init(&ctx, command_callback, packet_end_callback, daddr, saddr);
 
     memcpy(data, data_str, data_len);
 
@@ -63,11 +61,11 @@ void test_handler_command_packet_bypass_with_burst_redundancy()
 
     for (int i = 0; i < npackets; i++)
     {
-        rx_packet_handler(p_arr[i]);
-        assert(rx_packet_handler(p_arr[i]) == PACKET_REDUNDANT);
+        rx_packet_handler(&ctx, p_arr[i]);
+        assert(rx_packet_handler(&ctx, p_arr[i]) == PACKET_REDUNDANT);
         if (i == 2)
         {
-            assert(rx_packet_handler(command_p1) == COMMAND_PACKET);
+            assert(rx_packet_handler(&ctx, command_p1) == COMMAND_PACKET);
         }
     }
 
@@ -79,16 +77,14 @@ cleanup:
 void test_handler_single_command_packet()
 {
     log_info("starting command packet test");
-    reset_packet_handler_state();
+    rx_handler_ctx_t ctx;
     char *data_str = COMMAND_PAYLOAD_STR;
     size_t data_len = strlen(data_str) + 1;
     uint8_t *data = malloc(data_len);
     uint16_t daddr = 0xFF00;
     uint16_t saddr = 0x00FF;
 
-    configure_rx_packet_handler(command_callback, packet_end_callback, daddr, saddr);
-
-    uint8_t data_str2[256];
+    rx_handler_init(&ctx, command_callback, packet_end_callback, daddr, saddr);
 
     memcpy(data, data_str, data_len);
 
@@ -103,7 +99,7 @@ void test_handler_single_command_packet()
 
     for (int i = 0; i < npackets; i++)
     {
-        rx_packet_handler(p_arr[i]);
+        rx_packet_handler(&ctx, p_arr[i]);
     }
 
 cleanup:
@@ -114,16 +110,14 @@ cleanup:
 void test_handler_single_array_all_capture_with_redundancy()
 {
     log_info("starting single array all capture with redundancy test");
-    reset_packet_handler_state();
+    rx_handler_ctx_t ctx;
     char *data_str = TEST_STRING;
     size_t data_len = strlen(data_str) + 1;
     uint8_t *data = malloc(data_len);
     uint16_t daddr = 0xFF00;
     uint16_t saddr = 0x00FF;
 
-    configure_rx_packet_handler(command_callback, packet_end_callback, daddr, saddr);
-
-    uint8_t data_str2[256];
+    rx_handler_init(&ctx, command_callback, packet_end_callback, daddr, saddr);
 
     memcpy(data, data_str, data_len);
 
@@ -138,9 +132,8 @@ void test_handler_single_array_all_capture_with_redundancy()
 
     for (int i = 0; i < npackets; i++)
     {
-        rx_packet_handler(p_arr[i]);
-
-        assert(rx_packet_handler(p_arr[i]) == PACKET_REDUNDANT);
+        rx_packet_handler(&ctx, p_arr[i]);
+        assert(rx_packet_handler(&ctx, p_arr[i]) == PACKET_REDUNDANT);
     }
 
 cleanup:
@@ -151,16 +144,14 @@ cleanup:
 void test_handler_single_array_all_capture_no_redundancy()
 {
     log_info("starting single array no redundancy all capture test");
-    reset_packet_handler_state();
+    rx_handler_ctx_t ctx;
     char *data_str = TEST_STRING;
     size_t data_len = strlen(data_str) + 1;
     uint8_t *data = malloc(data_len);
     uint16_t daddr = 0xFF00;
     uint16_t saddr = 0x00FF;
 
-    configure_rx_packet_handler(command_callback, packet_end_callback, daddr, saddr);
-
-    uint8_t data_str2[256];
+    rx_handler_init(&ctx, command_callback, packet_end_callback, daddr, saddr);
 
     memcpy(data, data_str, data_len);
 
@@ -175,7 +166,7 @@ void test_handler_single_array_all_capture_no_redundancy()
 
     for (int i = 0; i < npackets; i++)
     {
-        rx_packet_handler(p_arr[i]);
+        rx_packet_handler(&ctx, p_arr[i]);
     }
 
 cleanup:

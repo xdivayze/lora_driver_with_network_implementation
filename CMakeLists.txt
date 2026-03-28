@@ -22,6 +22,7 @@ target_sources(lora_networking_lib
     src/sx127x_config.c
     src/sx127x_rx_utils.c
     src/sx127x_utils.c
+    src/sx127x_timer.c
 )
 
 target_include_directories(lora_networking_lib

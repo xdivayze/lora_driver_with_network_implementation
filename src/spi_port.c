@@ -1,29 +1,24 @@
 #include "spi_port.h"
-#include <stdbool.h>
 
-static bool initialized = false;
-
-static spi_register_reader_t spi_burst_reader;
-static spi_register_writer_t spi_burst_writer;
-
-void configure_spi_port(spi_register_writer_t cfg_spi_writer, spi_register_reader_t cfg_spi_reader)
+sx127x_err_t spi_port_init(spi_port_t *port, spi_register_writer_t writer, spi_register_reader_t reader, const void *spi_handle)
 {
-    spi_burst_reader = cfg_spi_reader;
-    spi_burst_writer = cfg_spi_writer;
-    initialized = true;
+    port->writer = writer;
+    port->reader = reader;
+    port->spi_handle = spi_handle;
+    port->initialized = true;
+    return SX_OK;
 }
 
-//TODO add NULL check for spi pointer
-sx127x_err_t spi_burst_write_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
+sx127x_err_t spi_burst_write_reg(const spi_port_t *port, uint8_t reg, const uint8_t *data, int len)
 {
-    if (!initialized)
+    if (!port->initialized)
         return SX_UNIT_UNITIALIZED;
-    return spi_burst_writer(spi, reg, data, len);
+    return port->writer(port->spi_handle, reg, data, len);
 }
 
-sx127x_err_t spi_burst_read_reg(const void *spi, const uint8_t reg, const uint8_t *data, int len)
+sx127x_err_t spi_burst_read_reg(const spi_port_t *port, uint8_t reg, uint8_t *data, int len)
 {
-    if (!initialized)
+    if (!port->initialized)
         return SX_UNIT_UNITIALIZED;
-    return spi_burst_reader(spi, reg, data, len);
+    return port->reader(port->spi_handle, reg, data, len);
 }

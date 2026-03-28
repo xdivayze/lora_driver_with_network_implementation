@@ -53,11 +53,12 @@ int test_data_to_packet_array()
     memcpy(data, data_str, data_len);
 
     size_t npackets = (size_t)ceil((double)data_len / payload_length_max) + 2;
-    packet **p_arr = malloc(sizeof(packet *) * npackets);
-    int ret;
+    packet **p_arr = calloc(npackets, sizeof(packet *));
+    int ret = 0;
     if (data_to_packet_array(p_arr, data, data_len, daddr, 0x00FF, 0x01, true))
     {
         ret = -1;
+        goto cleanup;
     }
 
     if (p_arr[npackets - 1] == NULL)

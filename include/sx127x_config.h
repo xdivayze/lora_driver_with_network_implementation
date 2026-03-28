@@ -1,10 +1,14 @@
 #pragma once
 #include "spi_port.h"
+#include "logger.h"
+#include "sx127x_timer.h"
 #include <stdlib.h>
 #include "sx127x_err.h"
 #include <stdbool.h>
 
-extern void* sx127x_spi;
+extern spi_port_t sx127x_spi_port;
+extern logger_ctx_t sx127x_logger;
+extern sx127x_timer_ctx_t sx127x_timer_ctx;
 
 #define MODE_LORA (1 << 7)
 #define MODE_LF (1 << 3)
@@ -47,4 +51,4 @@ sx127x_err_t sx_1278_set_spreading_factor(uint8_t sf);
 
 sx127x_err_t sx1278_set_bandwidth(bandwidths bw, coding_rate cr, bool enable_explicit_headers);
 
-sx127x_err_t initialize_sx_1278();
+sx127x_err_t initialize_sx_1278(spi_port_t spi, logger_ctx_t logger, sx127x_timer_ctx_t timer);

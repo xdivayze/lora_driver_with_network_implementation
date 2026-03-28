@@ -7,8 +7,10 @@
 #include "sx127x_config.h"
 #include "rx_packet_handler.h"
 #include <string.h>
+
 #define TAG "RX_UTILS"
-sx127x_err_t start_rx_loop()
+
+sx127x_err_t start_rx_loop(rx_handler_ctx_t *handler)
 {
     sx127x_err_t ret;
     uint8_t data;
@@ -21,7 +23,7 @@ sx127x_err_t start_rx_loop()
     ret = sx1278_switch_mode(MODE_LORA | MODE_RX_CONTINUOUS);
     if (ret != SX_OK)
     {
-        network_log_err(TAG, "error occured while switching mode");
+        network_log_err(&sx127x_logger, TAG, "error occured while switching mode");
         goto cleanup;
     }
 
@@ -30,53 +32,47 @@ sx127x_err_t start_rx_loop()
         ret = sx1278_clear_irq();
         if (ret != SX_OK)
         {
-            network_log_err(TAG, "couldnt clear irq");
+            network_log_err(&sx127x_logger, TAG, "couldnt clear irq");
             goto cleanup;
         }
 
         ret = sx1278_switch_mode(MODE_LORA | MODE_RX_CONTINUOUS);
         if (ret != SX_OK)
         {
-            network_log_err(TAG, "error occured while switching mode");
+            network_log_err(&sx127x_logger, TAG, "error occured while switching mode");
             goto cleanup;
         }
 
         ret = poll_for_irq_flag_no_timeout(1, (1 << 6), false);
         if (ret != SX_OK)
         {
-            network_log_err(TAG, "failed poll for packet received flag. ");
+            network_log_err(&sx127x_logger, TAG, "failed poll for packet received flag. ");
             continue;
         }
 
         ret = read_last_packet(rx_p);
         if (ret != SX_OK)
         {
-            network_log_err(TAG, "error occured while reading the last packet");
+            network_log_err(&sx127x_logger, TAG, "error occured while reading the last packet");
             continue;
         }
 
         ret = sx_1278_send_packet(ack_packet(rx_p->src_address, rx_p->dest_address, rx_p->ack_id, rx_p->sequence_number), false);
         if (ret != SX_OK)
         {
-            network_log_err(TAG, "error occured while sending the ack packet");
+            network_log_err(&sx127x_logger, TAG, "error occured while sending the ack packet");
             goto cleanup;
         }
 
-        // packet_description(rx_p, p_desc);
-        // ESP_LOGI(TAG, "received  packet:\n%s", p_desc);
-
-        rx_packet_handler(rx_p);
+        rx_packet_handler(handler, rx_p);
     }
 
 cleanup:
     free_packet(rx_p);
+    free(p_desc);
     return ret;
 }
 
-// uses irq flags to check if rxdone is set but does not poll for the flag. for polling use poll_for_irq_flag
-// resets irq
-// assumes standby mode
-// allocates packet payload
 sx127x_err_t read_last_packet(packet *p)
 {
     static uint8_t rx_buffer[255];
@@ -85,8 +81,7 @@ sx127x_err_t read_last_packet(packet *p)
     int packet_size = parse_packet(rx_buffer, p);
     if (packet_size == -1)
     {
-        network_log_err(TAG, "packet couldnt be parsed, discarding packet\n");
-
+        network_log_err(&sx127x_logger, TAG, "packet couldnt be parsed, discarding packet\n");
         ret = SX_INVALID_STATE;
         goto cleanup;
     }
@@ -94,7 +89,7 @@ sx127x_err_t read_last_packet(packet *p)
     ret = SX_OK;
 
 cleanup:
-    memset(rx_buffer, 0x00, sizeof(rx_buffer)); // fill rx buffer with zeros
+    memset(rx_buffer, 0x00, sizeof(rx_buffer));
     sx1278_clear_irq();
     return ret;
 }

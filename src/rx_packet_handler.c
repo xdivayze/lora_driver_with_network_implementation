@@ -1,56 +1,40 @@
 #include "rx_packet_handler.h"
-#define PACKET_CAPTURE_MAX_COUNT (UINT8_MAX - 1)
+#include <string.h>
 
-static bool capture = false;
-static uint8_t capture_ack_id = 0x00;
-static packet *captured_packet_arr[PACKET_CAPTURE_MAX_COUNT] = {NULL};
-static size_t captured_n = 0;
-
-static uint16_t remote_src_addr = 0x00;
-static uint16_t host_addr = 0x00;
-
-static bool handlerConfigured = false;
-
-command_packet_handler_t command_packet_handler;
-capture_end_handler_t capture_end_handler;
-
-void set_remote_addr(uint16_t cfg_remote_src_addr)
+void rx_handler_init(rx_handler_ctx_t *ctx, command_packet_handler_t cmd_handler, capture_end_handler_t end_handler, uint16_t host_addr, uint16_t remote_src_addr)
 {
-    remote_src_addr = cfg_remote_src_addr;
-}
-// passed callback functions must take ownership of the passed packets
-void configure_rx_packet_handler(command_packet_handler_t cfg_command_packet_handler, capture_end_handler_t cfg_capture_end_handler, uint16_t cfg_host_addr, uint16_t cfg_remote_src_addr)
-{
-    command_packet_handler = cfg_command_packet_handler;
-    capture_end_handler = cfg_capture_end_handler;
-    host_addr = cfg_host_addr;
-    remote_src_addr = cfg_remote_src_addr;
-    handlerConfigured = true;
+    memset(ctx, 0, sizeof(*ctx));
+    ctx->command_packet_handler = cmd_handler;
+    ctx->capture_end_handler = end_handler;
+    ctx->host_addr = host_addr;
+    ctx->remote_src_addr = remote_src_addr;
+    ctx->configured = true;
 }
 
-// resets the array index
-// resets capture state to false
-// resets capture ack id
-void reset_packet_handler_state()
+void rx_handler_set_remote_addr(rx_handler_ctx_t *ctx, uint16_t remote_src_addr)
 {
-    capture = false;
-    captured_n = 0;
-    capture_ack_id = 0x00;
+    ctx->remote_src_addr = remote_src_addr;
 }
 
-packet **get_rx_captured_packet_array()
+// resets capture state, array index, and capture ack id
+void rx_handler_reset(rx_handler_ctx_t *ctx)
 {
-    return captured_packet_arr;
+    ctx->capture = false;
+    ctx->captured_n = 0;
+    ctx->capture_ack_id = 0x00;
 }
+
+packet **rx_handler_get_captured_array(rx_handler_ctx_t *ctx)
+{
+    return ctx->captured_packet_arr;
+}
+
 // rx_p ownership transferred to callee
-rx_handler_return rx_packet_handler(packet *rx_p)
+rx_handler_return rx_packet_handler(rx_handler_ctx_t *ctx, packet *rx_p)
 {
-
-    static uint8_t last_received_ack_id = 0x00;
-    static uint8_t last_received_seq_number = 0x00;
     rx_handler_return ret = UNKNOWN_PACKET;
 
-    if (!handlerConfigured)
+    if (!ctx->configured)
     {
         ret = HANDLER_NOT_CONFIGURED;
         goto cleanup;
@@ -62,82 +46,80 @@ rx_handler_return rx_packet_handler(packet *rx_p)
         goto cleanup;
     }
 
-    if (rx_p->dest_address != host_addr)
+    if (rx_p->dest_address != ctx->host_addr)
     {
         ret = PACKET_REJECTED;
         goto cleanup;
     }
 
-    if (rx_p->src_address != remote_src_addr)
+    if (rx_p->src_address != ctx->remote_src_addr)
     {
         ret = PACKET_REJECTED;
         goto cleanup;
     }
 
     // reject redundant packets
-    if ((rx_p->ack_id == last_received_ack_id) && (rx_p->sequence_number == last_received_seq_number))
+    if ((rx_p->ack_id == ctx->last_received_ack_id) && (rx_p->sequence_number == ctx->last_received_seq_number))
     {
         ret = PACKET_REDUNDANT;
         goto cleanup;
     }
 
-    last_received_ack_id = rx_p->ack_id;
-    last_received_seq_number = rx_p->sequence_number;
+    ctx->last_received_ack_id = rx_p->ack_id;
+    ctx->last_received_seq_number = rx_p->sequence_number;
+
     switch (check_packet_type(rx_p))
     {
     case PACKET_BEGIN:
-        if (!capture)
+        if (!ctx->capture)
         {
-            reset_packet_handler_state();
-            capture = true;
-            capture_ack_id = rx_p->ack_id;
+            rx_handler_reset(ctx);
+            ctx->capture = true;
+            ctx->capture_ack_id = rx_p->ack_id;
             ret = CAPTURE_BEGIN;
         }
         else
             ret = CAPTURE_ALREADY_ON;
-
         break;
 
     case PACKET_DATA:
-        if (capture && (rx_p->ack_id == capture_ack_id))
-        { // if ack id is being captured
-            if (captured_n >= PACKET_CAPTURE_MAX_COUNT)
+        if (ctx->capture && (rx_p->ack_id == ctx->capture_ack_id))
+        {
+            if (ctx->captured_n >= PACKET_CAPTURE_MAX_COUNT)
             {
                 ret = CAPTURE_ARRAY_FULL;
                 break;
             }
-
             // reject the packet if it is not the next sequential one
-            if ((rx_p->sequence_number != (captured_n + 1))) // data packets start at index 1, check for the next one
+            if (rx_p->sequence_number != (ctx->captured_n + 1))
             {
                 ret = PACKET_REJECTED;
                 goto cleanup;
             }
-            packet* rx_p_copy = copy_packet(rx_p);
-            captured_packet_arr[captured_n] = rx_p_copy;
-            captured_n++;
+            packet *rx_p_copy = copy_packet(rx_p);
+            ctx->captured_packet_arr[ctx->captured_n] = rx_p_copy;
+            ctx->captured_n++;
             ret = DATA_PACKET_CAPTURED;
             break;
         }
-        if (rx_p->ack_id != capture_ack_id)
-        { // ack id is not being captured, process command packet
-            packet* rx_p_copy = copy_packet(rx_p);
-            command_packet_handler(rx_p_copy);
+        if (rx_p->ack_id != ctx->capture_ack_id)
+        {
+            packet *rx_p_copy = copy_packet(rx_p);
+            ctx->command_packet_handler(rx_p_copy);
             ret = COMMAND_PACKET;
             break;
         }
-        // reject if capture is off and ack id is being captured
         ret = PACKET_REJECTED;
         break;
 
     case PACKET_END:
-        if (!capture)
+        if (!ctx->capture)
         {
             ret = CAPTURE_NOT_ON;
             break;
         }
-        capture_end_handler(captured_packet_arr, captured_n);
-        reset_packet_handler_state();
+        ctx->capture_end_handler(ctx->captured_packet_arr, ctx->captured_n);
+        rx_handler_reset(ctx);
         ret = CAPTURE_END;
         break;
 

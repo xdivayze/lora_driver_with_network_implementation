@@ -14,8 +14,9 @@ static void logger_fcn(char *str, log_level_t log_level)
 
 int test_logger_log_level_lower_bound()
 {
-    configure_logger(logger_fcn, LOG_INFO_LOW);
-    network_log(TEST_LOG_STR, LOG_INFO_HIGH);
+    logger_ctx_t ctx;
+    logger_init(&ctx, logger_fcn, LOG_INFO_LOW);
+    network_log(&ctx, TEST_LOG_STR, LOG_INFO_HIGH);
     int ret = test_switch == 1 ? 0 : -1;
     test_switch = 0;
     return ret;
@@ -23,8 +24,9 @@ int test_logger_log_level_lower_bound()
 
 int test_logger_log_level_upper_bound()
 {
-    configure_logger(logger_fcn, LOG_INFO_HIGH);
-    network_log(TEST_LOG_STR, LOG_INFO_LOW);
+    logger_ctx_t ctx;
+    logger_init(&ctx, logger_fcn, LOG_INFO_HIGH);
+    network_log(&ctx, TEST_LOG_STR, LOG_INFO_LOW);
     int ret = test_switch == 1 ? 0 : -1;
     test_switch = 0;
     return ret;
@@ -32,8 +34,9 @@ int test_logger_log_level_upper_bound()
 
 int test_logger_function_call()
 {
-    configure_logger(logger_fcn, LOG_INFO_LOW);
-    network_log(TEST_LOG_STR, LOG_INFO_LOW);
+    logger_ctx_t ctx;
+    logger_init(&ctx, logger_fcn, LOG_INFO_LOW);
+    network_log(&ctx, TEST_LOG_STR, LOG_INFO_LOW);
     int ret = test_switch == 1 ? 0 : -1;
     test_switch = 0;
     return ret;
