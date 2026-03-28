@@ -8,6 +8,10 @@ set(TEST_SOURCES
     test_rx_packet_handler.c
     test_logger.c
     test_spi_port.c
+    test_sx127x_timer.c
+    test_sx127x_config.c
+    test_sx127x_driver.c
+    test_sx127x_utils.c
 )
 
 foreach(src IN LISTS TEST_SOURCES)
