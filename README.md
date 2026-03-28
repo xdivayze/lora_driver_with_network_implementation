@@ -218,7 +218,7 @@ Calculated using the Semtech time-on-air formula (SX1276 datasheet §4.1.1) with
 | `send_burst(p_buf, len)` | Send a full packet array with per-packet ACK confirmation |
 | `sx_1278_send_packet(p, switch_to_rx)` | Serialise and transmit a packet struct (no ACK handling) |
 | `sx1278_poll_and_read_packet(rx_p, timeout)` | Switch to RX single, wait for a packet, read and parse it |
-| `sx_1278_get_channel_rssis(rssi_data, len)` | Read RSSI across all channels using FSK mode |
+| `sx_1278_get_channel_rssis(rssi_data, len)` | Read RSSI across all channels using FSK mode — **call `initialize_sx_1278()` afterwards**, as switching to FSK can reset LoRa-mode registers |
 | `poll_for_irq_flag_no_timeout(delay_ms, mask, cleanup)` | Poll IRQ register indefinitely until `mask` bit set |
 
 ### `rx_packet_handler.h`

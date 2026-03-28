@@ -1,0 +1,5 @@
+pingpong/build_receiver
+pingpong/build_sender
+pingpong/.pytest_cache
+pingpong/__pycache__
+pingpong/sdkconfig.ci.receiver

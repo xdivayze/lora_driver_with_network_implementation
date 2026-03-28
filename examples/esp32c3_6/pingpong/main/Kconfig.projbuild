@@ -1,0 +1,28 @@
+menu "LoRa Hardware Config"
+
+    choice LORA_ROLE
+        prompt "Device role"
+        default LORA_ROLE_SENDER
+        config LORA_ROLE_SENDER
+            bool "Sender"
+        config LORA_ROLE_RECEIVER
+            bool "Receiver"
+    endchoice
+
+    config LORA_PIN_NSS
+        int "NSS (CS) GPIO number"
+        default 3
+
+    config LORA_PIN_SCK
+        int "SCK GPIO number"
+        default 0
+
+    config LORA_PIN_MISO
+        int "MISO GPIO number"
+        default 1
+
+    config LORA_PIN_MOSI
+        int "MOSI GPIO number"
+        default 2
+
+endmenu

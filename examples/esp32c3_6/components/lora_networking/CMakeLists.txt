@@ -1,0 +1,15 @@
+idf_component_register(
+    SRCS
+    "../../../../src/sx127x_config.c"
+    "../../../../src/sx127x_driver.c"
+    "../../../../src/sx127x_utils.c"
+    "../../../../src/sx127x_rx_utils.c"
+    "../../../../src/spi_port.c"
+    "../../../../src/logger.c"
+    "../../../../src/sx127x_timer.c"
+    "../../../../src/packet.c"
+    "../../../../src/network_data_operations.c"
+    "../../../../src/rx_packet_handler.c"
+    INCLUDE_DIRS
+    "../../../../include"
+)

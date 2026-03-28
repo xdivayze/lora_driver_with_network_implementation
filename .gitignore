@@ -1,3 +1,5 @@
 Testing
 build
 tests/Testing
+examples/esp32c3/sdkconfig
+examples/esp32c3/sdkconfig.ci

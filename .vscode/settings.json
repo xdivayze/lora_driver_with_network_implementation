@@ -1,0 +1,9 @@
+{
+  "idf.currentSetup": "/home/cavej/esp/esp-idf-v5.5.2",
+  "clangd.path": "/home/cavej/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/home/cavej/repos/lora_driver_with_network_implementation/build"
+  ]
+}

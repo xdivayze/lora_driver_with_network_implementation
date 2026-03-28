@@ -1,0 +1,6 @@
+{
+    "idf.currentSetup": "/home/cavej/esp/esp-idf-v5.5.2",
+    "idf.customExtraVars": {
+        "IDF_TARGET": "esp32c3"
+    }
+}
