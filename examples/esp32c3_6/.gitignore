@@ -7,3 +7,10 @@ pingpong/.cache
 pingpong/sdkconfig
 pingpong/sdkconfig.old
 pingpong/sdkconfig.ci.receiver
+
+burst/build
+burst/.pytest_cache
+burst/__pycache__
+burst/.cache
+burst/sdkconfig
+burst/sdkconfig.old
