@@ -13,7 +13,7 @@
 #include "sx127x_utils.h"
 
 #define TAG        "PINGPONG"
-#define SPI_HOST   SPI2_HOST
+#define LORA_SPI_HOST   SPI2_HOST
 #define PING_STR   "ping"
 #define PONG_STR   "pong"
 #define ROUNDS     5
@@ -32,6 +32,7 @@ static esp_err_t esp_spi_write(spi_device_handle_t spi, const uint8_t addr, cons
         ESP_LOGE(TAG, "couldnt acquire bus\n");
         return ret;
     }
+    uint8_t *cmd = NULL;
     uint8_t *data_dma = heap_caps_malloc(len, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
     if (!data_dma)
     {
@@ -42,7 +43,7 @@ static esp_err_t esp_spi_write(spi_device_handle_t spi, const uint8_t addr, cons
     if (len <= 0)
         return ESP_OK;
 
-    uint8_t *cmd = heap_caps_malloc(1, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+    cmd = heap_caps_malloc(1, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
     if (!cmd)
     {
         ret = ESP_ERR_NO_MEM;
@@ -88,13 +89,14 @@ static esp_err_t esp_spi_read(spi_device_handle_t spi, const uint8_t addr, uint8
     esp_err_t ret;
     uint8_t *ret_data_dma = NULL;
 
+    uint8_t *cmd = NULL;
     uint8_t *dummy = heap_caps_malloc(len, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
     if (!dummy)
     {
         ret = ESP_ERR_NO_MEM;
         goto cleanup;
     }
-    uint8_t *cmd = heap_caps_malloc(1, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+    cmd = heap_caps_malloc(1, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
     if (!cmd)
     {
         ret = ESP_ERR_NO_MEM;
@@ -185,8 +187,86 @@ static void spi_init(void)
         .spics_io_num   = CONFIG_LORA_PIN_NSS,
         .queue_size     = 1,
     };
-    ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST, &bus, SPI_DMA_CH_AUTO));
-    ESP_ERROR_CHECK(spi_bus_add_device(SPI_HOST, &dev, &spi_handle));
+    ESP_ERROR_CHECK(spi_bus_initialize(LORA_SPI_HOST, &bus, SPI_DMA_CH_AUTO));
+    ESP_ERROR_CHECK(spi_bus_add_device(LORA_SPI_HOST, &dev, &spi_handle));
+}
+
+// -----------------------------------------------------------------------
+// Pingpong logic
+// -----------------------------------------------------------------------
+
+static void run_sender(void)
+{
+    uint8_t buf[64];
+    size_t  len;
+
+    for (int i = 0; i < ROUNDS; i++)
+    {
+        if (sx1278_send_payload((uint8_t *)PING_STR, strlen(PING_STR), 1) != SX_OK)
+        {
+            ESP_LOGE(TAG, "failed to send ping");
+            return;
+        }
+        ESP_LOGI(TAG, "ping sent");
+
+        if (poll_for_irq_flag(PHY_TIMEOUT_MSEC, 3, (1 << 6), false) != SX_OK)
+        {
+            ESP_LOGE(TAG, "timed out waiting for pong");
+            return;
+        }
+        if (sx1278_read_last_payload(buf, &len) != SX_OK)
+        {
+            ESP_LOGE(TAG, "failed to read pong");
+            return;
+        }
+        if (len != strlen(PONG_STR) || memcmp(buf, PONG_STR, len) != 0)
+        {
+            ESP_LOGE(TAG, "unexpected payload");
+            return;
+        }
+        ESP_LOGI(TAG, "pong received");
+    }
+
+    printf("test passed\n");
+}
+
+static void run_receiver(void)
+{
+    uint8_t buf[64];
+    size_t  len;
+
+    if (sx1278_switch_mode(MODE_LORA | MODE_RX_CONTINUOUS) != SX_OK)
+    {
+        ESP_LOGE(TAG, "failed to enter rx mode");
+        return;
+    }
+
+    for (int i = 0; i < ROUNDS; i++)
+    {
+        if (poll_for_irq_flag(PHY_TIMEOUT_MSEC * 10, 3, (1 << 6), false) != SX_OK)
+        {
+            ESP_LOGE(TAG, "timed out waiting for ping");
+            return;
+        }
+        if (sx1278_read_last_payload(buf, &len) != SX_OK)
+        {
+            ESP_LOGE(TAG, "failed to read ping");
+            return;
+        }
+        if (len != strlen(PING_STR) || memcmp(buf, PING_STR, len) != 0)
+        {
+            ESP_LOGE(TAG, "unexpected payload");
+            return;
+        }
+        ESP_LOGI(TAG, "ping received");
+
+        if (sx1278_send_payload((uint8_t *)PONG_STR, strlen(PONG_STR), 1) != SX_OK)
+        {
+            ESP_LOGE(TAG, "failed to send pong");
+            return;
+        }
+        ESP_LOGI(TAG, "pong sent");
+    }
 }
 
 // -----------------------------------------------------------------------
@@ -209,49 +289,11 @@ void app_main(void)
         printf("init failed\n");
         return;
     }
+    printf("sx1278 init ok\n");
 
-    uint8_t buf[32];
-    size_t  len = 0;
-
-#if CONFIG_LORA_ROLE_SENDER
-    for (int i = 0; i < ROUNDS; i++)
-    {
-        sx127x_err_t ret = sx1278_send_payload((uint8_t *)PING_STR, sizeof(PING_STR), 1);
-        if (ret != SX_OK)
-        {
-            printf("ping send failed round %d\n", i);
-            return;
-        }
-        printf("ping sent\n");
-
-        ret = sx1278_read_last_payload(buf, &len);
-        if (ret != SX_OK || strncmp((char *)buf, PONG_STR, sizeof(PONG_STR)) != 0)
-        {
-            printf("pong receive failed round %d\n", i);
-            return;
-        }
-        printf("pong received\n");
-    }
-    printf("test passed\n");
-
-#elif CONFIG_LORA_ROLE_RECEIVER
-    for (int i = 0; i < ROUNDS; i++)
-    {
-        sx127x_err_t ret = sx1278_read_last_payload(buf, &len);
-        if (ret != SX_OK || strncmp((char *)buf, PING_STR, sizeof(PING_STR)) != 0)
-        {
-            printf("ping receive failed round %d\n", i);
-            return;
-        }
-        printf("ping received\n");
-
-        ret = sx1278_send_payload((uint8_t *)PONG_STR, sizeof(PONG_STR), 1);
-        if (ret != SX_OK)
-        {
-            printf("pong send failed round %d\n", i);
-            return;
-        }
-        printf("pong sent\n");
-    }
+#if defined(CONFIG_LORA_ROLE_SENDER)
+    run_sender();
+#else
+    run_receiver();
 #endif
 }

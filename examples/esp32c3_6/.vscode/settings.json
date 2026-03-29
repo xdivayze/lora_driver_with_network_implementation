@@ -2,5 +2,9 @@
     "idf.currentSetup": "/home/cavej/esp/esp-idf-v5.5.2",
     "idf.customExtraVars": {
         "IDF_TARGET": "esp32c3"
-    }
+    },
+    "python.defaultInterpreterPath": "/home/cavej/.espressif/python_env/idf5.5_py3.14_env/bin/python3",
+    "python.analysis.extraPaths": [
+        "/home/cavej/.espressif/python_env/idf5.5_py3.14_env/lib/python3.14/site-packages"
+    ]
 }

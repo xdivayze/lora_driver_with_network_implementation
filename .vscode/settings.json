@@ -5,5 +5,9 @@
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=/home/cavej/repos/lora_driver_with_network_implementation/build"
+  ],
+  "python.defaultInterpreterPath": "/home/cavej/.espressif/python_env/idf5.5_py3.14_env/bin/python3",
+  "python.analysis.extraPaths": [
+    "/home/cavej/.espressif/python_env/idf5.5_py3.14_env/lib/python3.14/site-packages"
   ]
 }

@@ -1,5 +1,9 @@
 pingpong/build_receiver
 pingpong/build_sender
+pingpong/build
 pingpong/.pytest_cache
 pingpong/__pycache__
+pingpong/.cache
+pingpong/sdkconfig
+pingpong/sdkconfig.old
 pingpong/sdkconfig.ci.receiver
