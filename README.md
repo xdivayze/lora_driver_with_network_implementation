@@ -250,6 +250,20 @@ Calculated using the Semtech time-on-air formula (SX1276 datasheet §4.1.1) with
 | `SX_INVALID_ARGUMENT` | Argument out of range |
 | `SX_NOT_INITIALIZED` | Context not yet initialised |
 
+## Hardware examples
+
+Tested on **ESP32-C3** (sender) and **ESP32-C6** (receiver) with **ESP-IDF v5.5.2**.
+
+Examples are in `examples/esp32c3_6/` and use the library as an ESP-IDF component via
+`examples/esp32c3_6/components/lora_networking/`.
+
+| Example | Location | Description |
+|---|---|---|
+| `pingpong` | `examples/esp32c3_6/pingpong/` | C3 sends "ping", C6 replies "pong", repeated 5 times |
+| `burst` | `examples/esp32c3_6/burst/` | C3 sends a multi-packet burst using `send_burst`; C6 receives and reassembles using `rx_packet_handler` |
+
+Each example has its own `README.md` with build, flash, and monitor instructions.
+
 ## Tests
 
 Nine test executables are built under `tests/`:
