@@ -2,6 +2,8 @@
 
 A platform-independent C library for the SX1278 LoRa radio module, with a lightweight packet-based networking layer on top.
 
+**LoRa®** is a registered trademark of Semtech Corporation. **SX1278/SX127x** is a product of Semtech Corporation. This project is an independent open-source driver and is not affiliated with or endorsed by Semtech.
+
 ## What it does
 
 - Initialises and configures the SX1278 radio (frequency, power, modulation parameters)
